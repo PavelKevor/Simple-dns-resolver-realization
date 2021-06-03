@@ -1,0 +1,1 @@
+# Simple-dns-resolver-realization
