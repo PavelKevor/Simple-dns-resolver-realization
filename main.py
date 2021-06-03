@@ -75,27 +75,31 @@ if __name__ == '__main__':
     
     Cache = TTLCacheModified(maxsize=50, ttl=100)
 
-    while True:
-        packet, addr = socket.recvfrom(1024)
-        message = DNSRecord.parse(packet)
-        header = message.header
-        ans_section = []
+    try:
+        while True:
+            packet, addr = socket.recvfrom(1024)
+            message = DNSRecord.parse(packet)
+            header = message.header
+            ans_section = []
         
-        if header.qr == 0 and header.rcode == 0:
-            for question in message.questions:
-                domain = question.qname
-                qtype = question.qtype
+            if header.qr == 0 and header.rcode == 0:
+                for question in message.questions:
+                    domain = question.qname
+                    qtype = question.qtype
                 
-                if domain not in Blacklist:
-                    res = resolver(domain, qtype)
-                if res:
-                    ans_section += res
+                    if domain not in Blacklist:
+                        res = resolver(domain, qtype)
+                    if res:
+                        ans_section += res
                     
-            header.qr = 1
-            header.ra = 1
-            if ans_section == []:
-                header.rcode = 4
+                header.qr = 1
+                header.ra = 1
+                if ans_section == []:
+                    header.rcode = 4
                 
-            answer = DNSRecord(header, message.questions, ans_section)
-            socket.sendto(answer.pack(), addr)
+                answer = DNSRecord(header, message.questions, ans_section)
+                socket.sendto(answer.pack(), addr)
+    except KeyboardInterrupt:
+        socket.close()
+        exit(0)
    
